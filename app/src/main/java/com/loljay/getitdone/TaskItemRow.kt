@@ -29,13 +29,13 @@ fun TaskItemRow(taskItem: TaskItem) {
             .padding(horizontal = 16.dp, vertical = 8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(8.dp)) {
             Text(
                 text = taskItem.taskName.split(" ").joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } },
                 style = MaterialTheme.typography.titleMedium,
                 fontSize = 20.sp
             )
-            Spacer(modifier = Modifier.padding(2.dp))
+            Spacer(modifier = Modifier.padding(8.dp))
             Text(
                 text = taskItem.nextActionName.replaceFirstChar { it.uppercase() },
                 style = MaterialTheme.typography.bodyMedium,
@@ -47,7 +47,10 @@ fun TaskItemRow(taskItem: TaskItem) {
                     )
                     .padding(horizontal =1.dp, vertical = 4.dp)
             )
-            Spacer(modifier = Modifier.padding(4.dp))
+            if(taskItem.dueDate != 0L) {
+                Spacer(modifier = Modifier.padding(4.dp))
+            }
+
             Row {
                 if (taskItem.dueDate != 0L) {
                     val dateString = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(taskItem.dueDate))
