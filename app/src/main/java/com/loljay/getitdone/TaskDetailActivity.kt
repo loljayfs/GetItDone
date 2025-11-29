@@ -1,5 +1,6 @@
 package com.loljay.getitdone
 
+import android.R
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -218,6 +219,7 @@ fun TaskDetailScreen(
             ) {
                  Text(
                     text = taskItem.nextActionName.replaceFirstChar { it.uppercase() },
+                     color = Color.Black,
                     style = MaterialTheme.typography.bodyLarge,
                     fontSize = 20.sp,
                     modifier = Modifier

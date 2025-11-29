@@ -39,6 +39,7 @@ fun TaskItemRow(taskItem: TaskItem) {
             Text(
                 text = taskItem.nextActionName.replaceFirstChar { it.uppercase() },
                 style = MaterialTheme.typography.bodyMedium,
+                color = Color.Black,
                 modifier = Modifier
                     .background(
                         color = Color(0xFFDCEDC8), // Light Green
