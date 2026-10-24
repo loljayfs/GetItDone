@@ -1,80 +1,131 @@
 package com.loljay.getitdone
 
-import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.loljay.getitdone.ui.theme.GetItDoneTheme
 
 @Composable
-fun TaskItemRow(taskItem: TaskItem) {
+fun TaskItemRow(
+    taskItem: TaskItem,
+    onComplete: () -> Unit,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isFocus: Boolean = false,
+    isDragging: Boolean = false
+) {
     Card(
-        modifier = Modifier
+        onClick = onClick,
+        modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            .padding(horizontal = 16.dp, vertical = 6.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = if (isDragging) 8.dp else 1.dp),
+        border = if (isFocus) {
+            BorderStroke(2.5.dp, MaterialTheme.colorScheme.primary)
+        } else {
+            BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
+        }
     ) {
-        Column(modifier = Modifier.padding(8.dp)) {
-            Text(
-                text = taskItem.taskName.split(" ").joinToString(" ") { it.replaceFirstChar { char -> char.uppercase() } },
-                style = MaterialTheme.typography.titleMedium,
-                fontSize = 20.sp
-            )
-            Spacer(modifier = Modifier.padding(8.dp))
-            Text(
-                text = taskItem.nextActionName.replaceFirstChar { it.uppercase() },
-                style = MaterialTheme.typography.bodyMedium,
-                color = Color.Black,
-                modifier = Modifier
-                    .background(
-                        color = Color(0xFFDCEDC8), // Light Green
-                        shape = RoundedCornerShape(8.dp)
-                    )
-                    .padding(horizontal =1.dp, vertical = 4.dp)
-            )
-            if(taskItem.dueDate != 0L) {
-                Spacer(modifier = Modifier.padding(4.dp))
-            }
-
-            Row {
-                if (taskItem.dueDate != 0L) {
-                    val dateString = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault()).format(Date(taskItem.dueDate))
+        Row(
+            modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 8.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                if (isFocus) {
                     Text(
-                        text = "Due: $dateString",
-                        style = MaterialTheme.typography.labelMedium
+                        text = "FOCUS",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
+                Text(
+                    text = taskItem.taskName,
+                    style = MaterialTheme.typography.titleMedium,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Surface(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        text = "Next: ${taskItem.nextActionName}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                    )
+                }
+                taskItem.purpose?.takeIf { it.isNotBlank() }?.let {
+                    Text(
+                        text = it,
+                        style = MaterialTheme.typography.bodySmall,
+                        fontStyle = FontStyle.Italic,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                TaskMeta(taskItem)
+            }
+            FilledIconButton(onClick = onComplete) {
+                Icon(Icons.Filled.Check, contentDescription = "Mark ${taskItem.taskName} done")
             }
         }
     }
 }
 
+@Composable
+fun TaskMeta(taskItem: TaskItem) {
+    val due = taskItem.dueDate
+    val overdue = due != null && isOverdue(due)
+    val text = buildString {
+        append(if (taskItem.isPersonal) "Personal" else "Work")
+        if (due != null) append(" · ${if (overdue) "Overdue" else "Due"} ${formatDueDate(due)}")
+    }
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = if (overdue) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 fun TaskItemRowPreview() {
-    TaskItemRow(
-        taskItem = TaskItem(
-            id = 1,
-            taskName = "sample task",
-            nextActionName = "complete the documentation",
-            dueDate = System.currentTimeMillis(),
-            goalType = GoalType.SHORT_TERM,
-            isPersonal = true
+    GetItDoneTheme {
+        TaskItemRow(
+            taskItem = TaskItem(
+                id = 1,
+                taskName = "Write the project proposal",
+                nextActionName = "Draft the outline",
+                dueDate = todayAsUtcMillis(),
+                purpose = "So the team can start with clarity"
+            ),
+            onComplete = {},
+            onClick = {}
         )
-    )
+    }
 }
